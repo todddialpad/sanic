@@ -223,15 +223,17 @@ class Http(Stream, metaclass=TouchUpMeta):
             request_body = False
             headers = []
 
-            for name, value in (h.split(":", 1) for h in split_headers):
-                name, value = h = name.lower(), value.lstrip()
-
+            for name, values in (h.split(":", 1) for h in split_headers):
+                name = name.lower()
                 if name in ("content-length", "transfer-encoding"):
                     request_body = True
-                elif name == "connection":
-                    self.keep_alive = value.lower() == "keep-alive"
+                for value in (v.lstrip() for v in values.split(',')):
+                    h = name, value
 
-                headers.append(h)
+                    if name == "connection":
+                        self.keep_alive = value.lower() == "keep-alive"
+
+                    headers.append(h)
         except Exception:
             raise BadRequest("Bad Request")
 
